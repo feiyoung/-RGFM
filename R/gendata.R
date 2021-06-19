@@ -24,12 +24,16 @@ cor.mat <- function (p, rho, type = "toeplitz"){
 }
 gendata <- function(seed=1, n=300, p=50, type='homonorm', q=6, rho=1){
   #type = {'homonorm', 'heternorm', 'pois', 'norm_pois', 'pois_bino', 'npb'}
+
+  if(length(rho)==1) rho <- c(rho, 1.5)
+  factor_term <- rho[2]
+
   set.seed(1)
   Z <- matrix(rnorm(p*q), p, q)
   B <- qr(Z)
   eigvs <- sqrt(sort(eigen(t(Z)%*%Z)$values, decreasing = T))
-  B1 <- qr.Q(B) %*% Diag(eigvs)
-  B0 <- rho* B1 %*% Diag(sign(B1[1,]))  / sqrt(n)
+  B1 <- qr.Q(B) %*% Diag(sqrt(eigvs))
+  B0 <- rho[1]* B1 %*% Diag(sign(B1[1,]))
   mu0 <- 0.4 * rnorm(p)
   Bm0 <- cbind(mu0, B0)
   set.seed(seed)
@@ -43,11 +47,14 @@ if(type == 'homonorm'){
   sigmas = 0.1 + 4* runif(p)
   X <- H0 %*% t(B0) + matrix(mu0, n,p, byrow=T) + MASS::mvrnorm(n, rep(0,p), diag(sigmas))
 }else if(type == 'pois'){
+  g1 <- 1:p
+  B0[g1, ] <- B0[g1, ]/ max(B0[g1, ]) * factor_term
   mu <- exp(H0 %*% t(B0) + matrix(mu0, n,p, byrow=T))
   X <- matrix(rpois(n*p,lambda=mu),n,p)
 }else if(type == 'norm_pois'){
   g1 <- 1:floor(p/2)
   g2 <- (floor(p/2)+1):p
+  Bm0[g2, -1] <- Bm0[g2, -1]/ max(Bm0[g2, -1]) * factor_term
   mu1 <-  cbind(1,H0) %*% t(Bm0[g1,])
   mu2 <- exp(cbind(1, H0) %*% t(Bm0[g2,]) )
   X <- cbind(matrix(rnorm(prod(dim(mu1)), mu1,1), n, floor(p/2)),
@@ -55,6 +62,7 @@ if(type == 'homonorm'){
 }else if(type == 'pois_bino'){
   g1 <- 1:floor(p/2)
   g2 <- (floor(p/2)+1):p
+  Bm0[g1, -1] <- Bm0[g1, -1]/ max(Bm0[g1, -1]) * factor_term
   mu1 <-  exp(cbind(1, H0) %*% t(Bm0[g1,]) )
   mu2 <- 1/(1+exp(-cbind(1, H0) %*% t(Bm0[g2,]) ))
   X <- cbind(matrix(rpois(prod(dim(mu1)), mu1), n, ncol(mu1)),

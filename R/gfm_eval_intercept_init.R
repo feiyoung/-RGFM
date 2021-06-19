@@ -181,7 +181,7 @@ objfunc <- function(Hm, Bm, X, omega, gcell, type){
       Q[,gcell[[j]]] <- (X[,gcell[[j]]] - BHm[,gcell[[j]]])^2
     }else if(type[j] == 'poisson'){
       me <- exp(BHm[,gcell[[j]]])
-      Q[,gcell[[j]]] <- -log(ppois(X[, gcell[[j]]], me)+eps1)
+      Q[,gcell[[j]]] <- -log(dpois(X[, gcell[[j]]], me)+eps1)
     }else if(type[j] == 'binomial'){
       me3 <- 1 / (1 + exp(-BHm[,gcell[[j]]]))
       Q[,gcell[[j]]] <- -X[, gcell[[j]]] * log(me3+eps1) +

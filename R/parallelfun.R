@@ -15,11 +15,11 @@ single_parallel <- function(func,iterable,varlist=NULL,...){
   #4.pass objects for each node.
   funcname <- deparse(substitute(func))
   varlist <- c(funcname,varlist)
-  clusterExport(cl, varlist = varlist, envir = environment())
+  parallel::clusterExport(cl, varlist = varlist, envir = environment())
   # Put the reqiured functions in GFM package into all nodes.
-  clusterCall(cl, function() library(GFM))
+  parallel::clusterCall(cl, function() library(GFM))
   #5.start to parallel computing
-  result <- parSapply(cl=cl,X=iterable,FUN=func,...)
+  result <- parallel::parSapply(cl=cl,X=iterable,FUN=func,...)
   #6.close parallel computing
   stopCluster(cl)
   return(result)
